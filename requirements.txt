@@ -1,5 +1,6 @@
+python-telegram-bot
 playwright
 pytesseract
-python-telegram-bot
-pytz
 Pillow
+pytz
+requests
