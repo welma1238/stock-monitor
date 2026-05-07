@@ -8,6 +8,8 @@ import pytesseract
 from PIL import Image
 from telegram import Bot
 
+pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
+
 # --- 設定區 ---
 # 這些變數會從 Render 的 Environment Variables 讀取
 TG_TOKEN = os.getenv("TG_TOKEN")
