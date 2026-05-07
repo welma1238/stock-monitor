@@ -13,7 +13,7 @@ from datetime import datetime
 # 從 Railway 系統抓取妳設定的變數
 TG_TOKEN = os.getenv("TG_TOKEN")
 TG_CHAT_ID = os.getenv("TG_CHAT_ID")
-YT_URL = "https://www.youtube.com/watch?v=oB2QY06L5Ew&t=896s"
+YT_URL = "https://www.youtube.com/watch?v=oB2QY06L5Ew&t=896s&autoplay=1"
 
 def run_task():
     # --- 診斷步驟 1：延遲啟動 ---
