@@ -1,5 +1,5 @@
 playwright
-easyocr
+pytesseract
 python-telegram-bot
 pytz
 Pillow
