@@ -1,7 +1,6 @@
-# 使用內建 Python 的穩定環境
 FROM python:3.10-slim
 
-# 安裝所有 Tesseract 和 影像處理需要的系統工具
+# 安裝系統必要套件
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     tesseract-ocr-chi-tra \
@@ -12,11 +11,10 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 COPY . .
 
-# 安裝 Python 套件
+# 安裝 Python 依賴
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 安裝瀏覽器
-RUN pip install playwright && playwright install chromium && playwright install-deps chromium
+# 安裝 Playwright 瀏覽器
+RUN playwright install chromium && playwright install-deps chromium
 
-# 執行你的腳本
 CMD ["python", "main.py"]
