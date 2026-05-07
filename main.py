@@ -18,6 +18,7 @@ TG_CHAT_ID = os.getenv("TG_CHAT_ID")
 YT_URL = "https://www.youtube.com/watch?v=AEBeWMM1atA" 
 
 def run_task():
+    
     # 取得台灣時間
     tz = pytz.timezone('Asia/Taipei')
     now = datetime.now(tz)
@@ -27,7 +28,10 @@ def run_task():
     # 使用接力賽模式：截圖完立即關閉瀏覽器，釋放記憶體給 OCR
     with sync_playwright() as p:
         print("正在啟動瀏覽器...")
-        browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-dev-shm-usage", "--mute-audio"])
+        # 合併所有必要的參數
+        browser = p.chromium.launch(
+        headless=True, 
+        args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--mute-audio"])
         context = browser.new_context(viewport={'width': 1920, 'height': 1080})
         page = context.new_page()
         
