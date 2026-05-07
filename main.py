@@ -90,4 +90,24 @@ def run_task():
                         # 從名單找股票名稱
                         for name, code in stock_map.items():
                             if name in text:
-                                if f"#{name}"
+                                if f"#{name}" not in tags: tags.append(f"#{name}")
+                                if f"#{code}" not in tags: tags.append(f"#{code}")
+                        
+                        tag_str = " ".join(tags)
+                        caption = f"{msg_type}\n⏰ 時間：{now.strftime('%Y-%m-%d %H:%M:%S')}\n{tag_str}"
+
+                        with open(img_path, 'rb') as photo:
+                            asyncio.run(bot.send_photo(chat_id=TG_CHAT_ID, photo=photo, caption=caption))
+                        print(f"已發送推播: {tag_str}")
+
+                except Exception as e:
+                    print(f"執行中錯誤: {e}")
+                
+                time.sleep(60) 
+            else:
+                # 盤後休眠模式，節省額度
+                print(f"[{current_time}] 非交易時段，監控休眠中...")
+                time.sleep(600)
+
+if __name__ == "__main__":
+    run_task()
