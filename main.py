@@ -24,10 +24,11 @@ def run_task():
 
     tz = pytz.timezone('Asia/Taipei')
     bot = Bot(token=TG_TOKEN)
+    
+    # 修正：確保非同步訊息有被執行
     asyncio.run(bot.send_message(chat_id=TG_CHAT_ID, text="🤖 診斷模式啟動！\n我會每 3 分鐘傳送一次截圖，確保監控畫面正常。"))
 
     with sync_playwright() as p:
-        # 優化瀏覽器啟動參數
         browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-dev-shm-usage", "--mute-audio"])
         context = browser.new_context(viewport={'width': 1280, 'height': 720})
         page = context.new_page()
@@ -36,7 +37,6 @@ def run_task():
         page.goto(YT_URL, timeout=90000)
         time.sleep(15) 
 
-        # 處理播放狀態
         try:
             page.mouse.click(640, 360)
             page.keyboard.press("k")
@@ -56,12 +56,13 @@ def run_task():
                 text = pytesseract.image_to_string(Image.open(img_path), lang='chi_tra')
                 print(f"[{current_time}] 掃描次數: {count}, 辨識文字長度: {len(text)}")
 
-                # --- 診斷邏輯：每 3 次掃描(約3分鐘)強制傳一張圖 ---
+                # --- 修正：加上 asyncio.run 確保照片發送 ---
                 if count % 3 == 0:
                     with open(img_path, 'rb') as photo:
+                        # 關鍵修正點：確保 coroutine 有被執行
                         asyncio.run(bot.send_photo(chat_id=TG_CHAT_ID, photo=photo, caption=f"📸 定期畫面檢查\n偵測文字長度: {len(text)}"))
+                    print(f"[{current_time}] 已發送診斷截圖")
 
-                # --- 原有新聞偵測邏輯 ---
                 msg_type = ""
                 if "最新" in text: msg_type = "🚩 【最新消息】"
                 elif "獨家" in text: msg_type = "🔥 【獨家消息】"
@@ -74,6 +75,7 @@ def run_task():
                     tag_str = " ".join(tags)
                     caption = f"{msg_type}\n⏰ 時間：{now.strftime('%Y-%m-%d %H:%M:%S')}\n{tag_str}"
                     with open(img_path, 'rb') as photo:
+                        # 關鍵修正點：確保 coroutine 有被執行
                         asyncio.run(bot.send_photo(chat_id=TG_CHAT_ID, photo=photo, caption=caption))
                     print(f"🎯 成功抓取新聞: {tag_str}")
 
