@@ -1,5 +1,5 @@
-playwright
-pytesseract
-python-telegram-bot
+playwright==1.42.0
+pytesseract==0.3.10
+python-telegram-bot==20.8
 pytz
 Pillow
