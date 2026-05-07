@@ -14,7 +14,8 @@ COPY . .
 # 安裝 Python 依賴
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 安裝 Playwright 瀏覽器
-RUN playwright install chromium && playwright install-deps chromium
+# 安裝 Playwright 瀏覽器及其依賴
+RUN pip install playwright && playwright install chromium && playwright install-deps chromium
 
+# 啟動指令 (請確認你的檔名是 main.py)
 CMD ["python", "main.py"]
