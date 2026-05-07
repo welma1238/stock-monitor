@@ -27,7 +27,7 @@ def run_task():
         page = browser.new_page(viewport={'width': 1920, 'height': 1080})
         
         try:
-            page.goto("你的YouTube直播網址", timeout=60000)
+            page.goto("https://www.youtube.com/watch?v=AEBeWMM1atA", timeout=60000)
             time.sleep(15) # 等待畫質穩定
             
             # 截全螢幕高清圖 (發送給 TG)
