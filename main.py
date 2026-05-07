@@ -11,7 +11,7 @@ from datetime import datetime
 TG_TOKEN = os.getenv("TG_TOKEN")
 TG_CHAT_ID = os.getenv("TG_CHAT_ID")
 # 換一個直播連結試試看，有時候特定影片會有更嚴格的限制
-YT_URL = "https://www.youtube.com/watch?v=WMT8VRPX-sM&autoplay=1"
+YT_URL = "https://www.youtube.com/watch?v=AEBeWMM1atA&autoplay=1"
 
 def send_to_tg_sync(text=None, photo_path=None):
     try:
