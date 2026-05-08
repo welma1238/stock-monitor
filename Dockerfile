@@ -1,8 +1,9 @@
 # 使用 Python 3.10 輕量版
 FROM python:3.10-slim
 
-# 1. 安裝系統依賴
-# 修正 libgl1-mesa-glx 缺失問題，改用 libgl1 並加入 nodejs 提供 yt-dlp 所需環境
+# 安裝系統依賴
+# 1. 將 libgl1-mesa-glx 改為 libgl1 以修正報錯
+# 2. 加入 nodejs 解決 yt-dlp 缺失 JavaScript 執行環境的問題
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     tesseract-ocr-chi-tra \
@@ -12,15 +13,12 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. 設定工作目錄
 WORKDIR /app
 
-# 3. 安裝 Python 套件
+# 安裝 Python 套件 (確保包含 pytz)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 4. 複製所有程式碼
 COPY . .
 
-# 5. 啟動程式
 CMD ["python", "main.py"]
