@@ -1,6 +1,4 @@
-yt-dlp
-opencv-python-headless
 requests
-Pillow
 pytesseract
-pytz
+opencv-python-headless
+yt-dlp
