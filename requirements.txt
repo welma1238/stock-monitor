@@ -5,3 +5,4 @@ pytesseract
 pytz
 Pillow
 vidgear
+streamlink
