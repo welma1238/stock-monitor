@@ -11,7 +11,7 @@ import pytz
 TG_TOKEN = os.getenv("TG_TOKEN")
 TG_CHAT_ID = os.getenv("TG_CHAT_ID")
 # 請務必確認這個直播網址是「公開」且正在直播的
-YT_URL = "https://www.youtube.com/watch?v=R2iMq5LKXco"
+YT_URL = "https://www.youtube.com/watch?v=oB2QY06L5Ew&t=896s"
 
 def get_live_stream_url(youtube_url):
     """強化版的串流網址獲取"""
