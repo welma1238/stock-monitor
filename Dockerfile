@@ -1,6 +1,6 @@
-FROM python:3.9-slim
+FROM python:3.10-slim
 
-# 安裝 Tesseract OCR 和 OpenCV 必備的系統函式庫 (修正 libgl1 報錯)
+# 安裝 Tesseract OCR 和必要的系統工具
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     tesseract-ocr-chi-tra \
