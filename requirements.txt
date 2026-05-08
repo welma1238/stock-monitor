@@ -1,6 +1,6 @@
-python-telegram-bot
-playwright
-pytesseract
-Pillow
-pytz
+yt-dlp
+opencv-python-headless
 requests
+Pillow
+pytesseract
+pytz
