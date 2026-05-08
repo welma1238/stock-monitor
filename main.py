@@ -6,7 +6,7 @@ import requests
 import pytesseract
 from PIL import Image
 from datetime import datetime
-import pytz # 處理日誌顯示缺失此套件的問題
+import pytz
 
 # --- 設定區 ---
 TG_TOKEN = os.getenv("TG_TOKEN")
@@ -14,24 +14,17 @@ TG_CHAT_ID = os.getenv("TG_CHAT_ID")
 YT_URL = "https://www.youtube.com/watch?v=oB2QY06L5Ew"
 
 def get_live_stream_url(youtube_url):
-    """
-    修正 format 設定以解決 'Requested format is not available' 報錯
-    並確保 cookies.txt 正常運作
-    """
+    """修正 format 設定以解決格式報錯，並載入 cookies.txt"""
     ydl_opts = {
-        # 修改這裡：使用更寬鬆的格式選擇，自動抓取最高畫質
         'format': 'best', 
         'quiet': True,
         'no_warnings': True,
         'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     }
     
-    # 自動偵測 cookies.txt
     if os.path.exists("cookies.txt"):
         ydl_opts['cookiefile'] = 'cookies.txt'
         print("ℹ️ 成功載入 cookies.txt")
-    else:
-        print("⚠️ 提醒：未偵測到 cookies.txt，可能會遇到機器人驗證問題")
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         try:
@@ -42,20 +35,14 @@ def get_live_stream_url(youtube_url):
             return None
 
 def process_and_ocr(frame):
-    """
-    精準對齊 Welma 的 1080p 裁剪參數 (y=1020)
-    """
+    """精準對齊 1080p 裁剪參數 (y=1020)"""
     h, w = frame.shape[:2]
-    
-    # 根據 613006060378128522.jpg 版面設定裁剪範圍
     y_start = int(h * 0.93) 
     y_end = int(h * 0.98)
     x_start = int(w * 0.05) 
     x_end = int(w * 0.95)
 
     crop_img = frame[y_start:y_end, x_start:x_end]
-    
-    # 影像增強提升 OCR 準確度
     gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 155, 255, cv2.THRESH_BINARY_INV)
     
@@ -78,11 +65,48 @@ def send_to_tg_msg(text):
         payload = {"chat_id": TG_CHAT_ID, "text": text}
         requests.post(url, data=payload, timeout=10)
     except Exception as e:
-        print(f"❌ TG 啟動訊息失敗: {e}")
+        print(f"❌ TG 訊息發送失敗: {e}")
 
 def run_monitor():
     tw_tz = pytz.timezone('Asia/Taipei')
     last_news = ""
     
+    # --- 修正後的啟動宣告 (解決原本 line 88 的語法錯誤) ---
     start_time = datetime.now(tw_tz).strftime("%Y-%m-%d %H:%M:%S")
-    send_to_tg_msg(f"🚀 股市監控機器人(最終優化版)已上線！\n時間
+    welcome_msg = f"🚀 股市監控機器人已修正語法並重新上線！\n啟動時間：{start_time}"
+    send_to_tg_msg(welcome_msg)
+    
+    print("🚀 啟動監控中...")
+
+    while True:
+        try:
+            stream_url = get_live_stream_url(YT_URL)
+            if not stream_url:
+                time.sleep(60)
+                continue
+
+            cap = cv2.VideoCapture(stream_url)
+            success, frame = cap.read()
+            
+            if success:
+                news_img, current_text = process_and_ocr(frame)
+                
+                if len(current_text) > 5 and current_text != last_news:
+                    now_str = datetime.now(tw_tz).strftime("%H:%M:%S")
+                    img_path = "current_news.png"
+                    cv2.imwrite(img_path, news_img)
+                    
+                    msg = f"🔔 【股市新聞速報】\n時間：{now_str}\n\n📝 內容：\n{current_text}"
+                    send_to_tg_photo(msg, img_path)
+                    
+                    last_news = current_text
+                    print(f"✅ 已成功抓取：{current_text}")
+                
+            cap.release()
+        except Exception as e:
+            print(f"⚠️ 運行異常: {e}")
+        
+        time.sleep(30)
+
+if __name__ == "__main__":
+    run_monitor()
