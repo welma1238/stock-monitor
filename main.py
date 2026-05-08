@@ -13,7 +13,7 @@ import pytz  # 確保 requirements.txt 有這項，否則會 ModuleNotFoundError
 TG_TOKEN = os.getenv("TG_TOKEN")
 TG_CHAT_ID = os.getenv("TG_CHAT_ID")
 # 妳指定的測試網址
-YT_URL = "https://www.youtube.com/watch?v=oB2QY06L5Ew"
+YT_URL = "https://www.youtube.com/watch?v=oB2QY06L5Ew&t=896s"
 
 def get_live_stream_url(youtube_url):
     """
