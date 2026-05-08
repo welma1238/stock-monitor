@@ -13,7 +13,7 @@ TG_CHAT_ID = os.getenv("TG_CHAT_ID")
 YT_URL = "https://www.youtube.com/watch?v=oB2QY06L5Ew"
 
 def process_and_ocr(frame):
-    """裁剪底部跑馬燈新聞區塊"""
+    """裁剪底部跑馬燈新聞區塊 (y=1020)"""
     h, w = frame.shape[:2]
     y_start, y_end = int(h * 0.93), int(h * 0.98)
     x_start, x_end = int(w * 0.05), int(w * 0.95)
@@ -38,21 +38,28 @@ def run_monitor():
     last_news = ""
     print("🚀 啟動 CamGear 穩定監控模式...")
 
-    # 使用 vidgear 的 CamGear 處理 YouTube 串流，這比原生 OpenCV 穩定得多
-    options = {"STREAM_RESOLUTION": "1080p"}
+    # 加入串流選項：包含 cookies.txt 的支援
+    options = {
+        "STREAM_RESOLUTION": "1080p",
+        "CAP_PROP_FPS": 1,        # 降低效能消耗
+        "STREAM_PARAMS": {"cookiefile": "cookies.txt"} if os.path.exists("cookies.txt") else {}
+    }
+    
+    # 初始化串流
     stream = CamGear(source=YT_URL, stream_mode=True, logging=True, **options).start()
+    time.sleep(5) # 💡 重要：給串流 5 秒鐘穩定時間，解決 Get current frame error
 
     try:
         while True:
             frame = stream.read()
             if frame is None:
-                print("⚠️ 讀取不到畫面，重試中...")
-                time.sleep(5)
+                print("⚠️ 讀取不到畫面，嘗試重新連接...")
+                time.sleep(10)
                 continue
 
             news_img, current_text = process_and_ocr(frame)
             
-            # 若內容改變且字數足夠，發送到 TG
+            # 判斷邏輯：字數 > 5 且內容有變動才發送
             if len(current_text) > 5 and current_text != last_news:
                 now_str = datetime.now(tw_tz).strftime("%H:%M:%S")
                 cv2.imwrite("news.png", news_img)
@@ -62,9 +69,10 @@ def run_monitor():
             
             time.sleep(30)
     except Exception as e:
-        print(f"🔥 運行異常: {e}")
+        print(f"🔥 運行中斷: {e}")
     finally:
-        stream.stop()
+        if stream:
+            stream.stop()
 
 if __name__ == "__main__":
     run_monitor()
