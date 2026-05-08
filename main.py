@@ -5,7 +5,7 @@ import requests
 import pytesseract
 from datetime import datetime
 import pytz
-from vidgear.gears import CamGear
+import streamlink
 
 # --- 設定區 ---
 TG_TOKEN = os.getenv("TG_TOKEN")
@@ -20,7 +20,7 @@ def send_to_tg(text):
 
 def process_and_ocr(frame):
     h, w = frame.shape[:2]
-    # 裁剪底部跑馬燈
+    # 針對直播畫面的跑馬燈區域裁剪
     y_start, y_end = int(h * 0.93), int(h * 0.98)
     x_start, x_end = int(w * 0.05), int(w * 0.95)
     crop_img = frame[y_start:y_end, x_start:x_end]
@@ -29,44 +29,54 @@ def process_and_ocr(frame):
     text = pytesseract.image_to_string(thresh, lang='chi_tra', config='--psm 7')
     return crop_img, text.strip()
 
+def get_stream_url(url):
+    """使用 streamlink 獲取最穩定的串流連結"""
+    try:
+        streams = streamlink.streams(url)
+        if "720p" in streams:
+            return streams["720p"].url
+        elif "best" in streams:
+            return streams["best"].url
+    except Exception as e:
+        print(f"❌ 獲取串流失敗: {e}")
+    return None
+
 def run_monitor():
     tw_tz = pytz.timezone('Asia/Taipei')
     last_news = ""
+    print("🚀 啟動監控程式...")
     
-    # 💡 移除啟動宣告，避免洗版
-    print("🚀 啟動中...")
+    while True:
+        try:
+            real_url = get_stream_url(YT_URL)
+            if not real_url:
+                print("⚠️ 無法取得串流，冷靜 5 分鐘後重試...")
+                time.sleep(300) # 💡 遇到 429 錯誤時強制休息，避免被封 IP
+                continue
 
-    # 改用 streamlink 作為後端，這對直播更友善
-    options = {
-        "STREAM_RESOLUTION": "720p", # 稍微調降解析度提升成功率
-        "STREAM_BACKEND": "streamlink", 
-    }
-    
-    stream = None
-    try:
-        stream = CamGear(source=YT_URL, stream_mode=True, logging=True, **options).start()
-        send_to_tg("✅ 機器人已成功連線，開始掃描新聞！")
-        
-        while True:
-            frame = stream.read()
-            if frame is None: break
+            cap = cv2.VideoCapture(real_url)
+            # 成功啟動後才發一次通知
+            send_to_tg("✅ 監控已重新連線，目前一切正常。")
+
+            while True:
+                success, frame = cap.read()
+                if not success: break
+
+                news_img, current_text = process_and_ocr(frame)
+                if len(current_text) >= 5 and current_text != last_news:
+                    now_str = datetime.now(tw_tz).strftime("%H:%M:%S")
+                    cv2.imwrite("news.png", news_img)
+                    url = f"https://api.telegram.org/bot{TG_TOKEN}/sendPhoto"
+                    with open("news.png", "rb") as photo:
+                        requests.post(url, data={"chat_id": TG_CHAT_ID, "caption": f"🔔 {now_str}\n{current_text}"}, files={"photo": photo})
+                    last_news = current_text
+                
+                time.sleep(30) # 每 30 秒掃描一次
             
-            news_img, current_text = process_and_ocr(frame)
-            if len(current_text) >= 5 and current_text != last_news:
-                now_str = datetime.now(tw_tz).strftime("%H:%M:%S")
-                cv2.imwrite("news.png", news_img)
-                url = f"https://api.telegram.org/bot{TG_TOKEN}/sendPhoto"
-                with open("news.png", "rb") as photo:
-                    requests.post(url, data={"chat_id": TG_CHAT_ID, "caption": f"🔔 {now_str}\n{current_text}"}, files={"photo": photo})
-                last_news = current_text
-            
-            time.sleep(30)
-            
-    except Exception as e:
-        print(f"🔥 錯誤: {e}")
-        time.sleep(60) # 出錯時等一分鐘再重試，避免洗版
-    finally:
-        if stream: stream.stop()
+            cap.release()
+        except Exception as e:
+            print(f"🔥 異常中斷: {e}")
+            time.sleep(60)
 
 if __name__ == "__main__":
     run_monitor()
