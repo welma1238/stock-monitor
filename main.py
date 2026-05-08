@@ -11,7 +11,7 @@ from datetime import datetime
 # 環境變數
 TG_TOKEN = os.getenv("TG_TOKEN")
 TG_CHAT_ID = os.getenv("TG_CHAT_ID")
-YT_URL = "https://www.youtube.com/watch?v=HR5H2b7-U5A" # 妳需要的特定直播連結
+YT_URL = "https://www.youtube.com/watch?v=AEBeWMM1atA" # 妳需要的特定直播連結
 
 def send_to_tg_sync(text=None, photo_path=None):
     try:
