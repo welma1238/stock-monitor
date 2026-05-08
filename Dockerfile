@@ -1,12 +1,14 @@
 # 使用 Python 3.10 輕量版
 FROM python:3.10-slim
 
-# 1. 安裝系統依賴：Tesseract OCR、繁體中文包、以及 OpenCV 所需的影像庫
+# 1. 安裝系統依賴
+# 修正 libgl1-mesa-glx 缺失問題，改用 libgl1 並加入 nodejs 提供 yt-dlp 所需環境
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     tesseract-ocr-chi-tra \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
+    nodejs \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -14,7 +16,6 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # 3. 安裝 Python 套件
-# 確保妳的 requirements.txt 包含: yt-dlp, opencv-python-headless, pytesseract, requests, Pillow, pytz
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
