@@ -1,21 +1,17 @@
+# 使用 Python 作為基底
 FROM python:3.10-slim
 
-# 安裝系統必要套件 (修正 libgl1 名稱)
+# 安裝系統依賴項目：包括 Tesseract 主程式與繁體中文包
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     tesseract-ocr-chi-tra \
-    libgl1 \
-    libglib2.0-0 \
+    libgl1-mesa-glx \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+# 接著才是安裝妳的 requirements.txt
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
 COPY . .
-
-# 安裝 Python 依賴
-RUN pip install --no-cache-dir -r requirements.txt
-
-# 安裝 Playwright 瀏覽器及其依賴
-RUN pip install playwright && playwright install chromium && playwright install-deps chromium
-
-# 啟動指令
 CMD ["python", "main.py"]
